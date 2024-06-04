@@ -169,6 +169,39 @@ router.post('/login', validate(userSchema), async (req, res) => {
 });
 
 
+
+
+/**
+ * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Log out a User
+ *     tags:
+ *       - Auth
+ *     responses:
+ *       '200':
+ *         description: Logged out successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Logged out successfully
+ *       '500':
+ *         description: Error while logging out
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error logging out
+ */
+
+
 router.post('/logout', (req, res) => {
     req.session.destroy(err => {
         if (err) return res.status(500).json({ message: 'Error logging out' });
