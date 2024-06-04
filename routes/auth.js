@@ -78,9 +78,8 @@ router.post('/register', validate(userSchema), async (req, res) => {
 
     try {
         const userExists = await User.findOne({ where: { username } });
-        if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
-        }
+        if (userExists) return res.status(400).json({ message: 'User already exists' });
+
 
         const hashedPassword = await bcrypt.hash(password, 10);
         await User.create({ username, password: hashedPassword });
@@ -132,10 +131,6 @@ router.post('/register', validate(userSchema), async (req, res) => {
 
 
 
-
-
-
-
 router.post('/login', validate(userSchema), async (req, res) => {
     const { username, password } = req.body;
 
@@ -154,8 +149,14 @@ router.post('/login', validate(userSchema), async (req, res) => {
             return res.status(400).json({ message: 'Invalid credentials' });
         }
 
+        req.session.user = {
+            username: user.username,
+            credits: user.credits
+        };
+
         const token = jwt.sign({ username }, process.env.OPENAI_API_KEY, { expiresIn: '1h' });
 
+        // useless
         user.token = token;
         await user.save();
         res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
@@ -167,6 +168,15 @@ router.post('/login', validate(userSchema), async (req, res) => {
     }
 });
 
+
+router.post('/logout', (req, res) => {
+    req.session.destroy(err => {
+        if (err) return res.status(500).json({ message: 'Error logging out' });
+
+        res.clearCookie('connect.sid');
+        res.json({ message: 'Logged out successfully' });
+    });
+});
 
 
 

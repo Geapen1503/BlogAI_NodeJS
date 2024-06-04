@@ -9,6 +9,9 @@ const swaggerConfig = require('./swagger');
 const blogaiRoute = require('./routes/blogai');
 const creditRouter = require('./routes/credit');
 const cookieParser = require('cookie-parser');
+const session = require('express-session');
+const SequelizeStore = require('connect-session-sequelize')(session.Store);
+const { sequelize } = require('./db/db');
 
 
 
@@ -30,6 +33,17 @@ app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'default_secret',
+    store: new SequelizeStore({ db: sequelize }),
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: process.env.NODE_ENV === 'production',
+        maxAge: 3600000
+    }
+}));
 
 
 app.use('/auth', authRoutes);
