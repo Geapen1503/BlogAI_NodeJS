@@ -8,10 +8,13 @@ const authenticateJWT = require('./middleware/auth');
 const swaggerConfig = require('./swagger');
 const blogaiRoute = require('./routes/blogai');
 const creditRouter = require('./routes/credit');
+const productsRoutes = require('./routes/products');
+const checkoutRoutes = require('./routes/checkout');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
 const { sequelize } = require('./db/db');
+const initializeProducts = require('./config/initializeProducts');
 
 
 
@@ -49,6 +52,8 @@ app.use(session({
 app.use('/auth', authRoutes);
 app.use('/blog', blogaiRoute);
 app.use('/credits', creditRouter);
+app.use('/products', productsRoutes);
+app.use('/checkout', checkoutRoutes);
 
 
 app.get('/protected', authenticateJWT, (req, res) => {res.send('This is a protected route'); });
@@ -58,6 +63,8 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 swaggerConfig(app);
 
+
+initializeProducts();
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

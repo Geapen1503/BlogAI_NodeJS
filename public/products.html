@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            background-color: #333;
+            color: #fff;
+            text-align: center;
+            padding: 1rem 0;
+            width: 100%;
+        }
+
+        main {
+            display: flex;
+            margin-top: 10vw;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            padding: 2rem;
+        }
+
+        .product-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .product {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            width: 250px;
+            margin: 10px;
+        }
+
+        .product h2 {
+            margin-top: 0;
+        }
+
+        .product .price {
+            font-size: 1.5rem;
+            color: #333;
+        }
+
+        .product button {
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .product button:hover {
+            background-color: #555;
+        }
+    </style>
+    <script src="https://js.stripe.com/v3/"></script>
+    <script>
+        async function fetchProducts() {
+            const response = await fetch('/products');
+            const products = await response.json();
+            const productsContainer = document.getElementById('products');
+
+            products.forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product';
+                productElement.innerHTML = `
+                    <h3>${product.name}</h3>
+                    <p>${product.description}</p>
+                    <p>Price: $${(product.price / 100).toFixed(2)}</p>
+                    <button onclick="buyProduct('${product.priceId}')">Buy</button>
+                `;
+                productsContainer.appendChild(productElement);
+            });
+        }
+
+        async function buyProduct(priceId) {
+            const response = await fetch('/checkout/create-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ priceId })
+            });
+            const { url } = await response.json();
+            window.location.href = url;
+        }
+
+
+        window.onload = fetchProducts;
+
+    </script>
+</head>
+<body>
+<header>
+    <h1>Products</h1>
+</header>
+<main>
+    <div class="product-container" id="products"></div>
+</main>
+</body>
+</html>
