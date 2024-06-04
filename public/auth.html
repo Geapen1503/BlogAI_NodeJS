@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auth Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Test Auth API</h1>
+
+<h2>Register</h2>
+<form id="registerForm">
+    <label for="regUsername">Username:</label>
+    <input type="text" id="regUsername" name="username" required>
+    <label for="regPassword">Password:</label>
+    <input type="password" id="regPassword" name="password" required>
+    <button type="submit">Register</button>
+</form>
+<pre id="registerResult"></pre>
+
+<h2>Login</h2>
+<form id="loginForm">
+    <label for="loginUsername">Username:</label>
+    <input type="text" id="loginUsername" name="username" required>
+    <label for="loginPassword">Password:</label>
+    <input type="password" id="loginPassword" name="password" required>
+    <button type="submit">Login</button>
+</form>
+<pre id="loginResult"></pre>
+
+
+
+<script>
+    document.getElementById('registerForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const username = document.getElementById('regUsername').value;
+        const password = document.getElementById('regPassword').value;
+        const response = await fetch('http://localhost:3000/auth/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+        });
+        const result = await response.json();
+        document.getElementById('registerResult').textContent = JSON.stringify(result, null, 2);
+    });
+
+    document.getElementById('loginForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+        const username = document.getElementById('loginUsername').value;
+        const password = document.getElementById('loginPassword').value;
+        const response = await fetch('http://localhost:3000/auth/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ username, password }),
+        });
+        const result = await response.json();
+        document.getElementById('loginResult').textContent = JSON.stringify(result, null, 2);
+        if (result.token) {
+            localStorage.setItem('token', result.token);
+        }
+    });
+</script>
+</body>
+</html>

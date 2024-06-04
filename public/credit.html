@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Credit Page</title>
+    <script>
+        function getToken() {
+            const cookies = document.cookie.split(';');
+            for (let cookie of cookies) {
+                const [name, value] = cookie.trim().split('=');
+                if (name === 'token') return value;
+            }
+            return null;
+        }
+
+        async function getCredit() {
+            const token = getToken();
+            if (!token) {
+                console.error('Token not found');
+                return;
+            }
+
+            try {
+                const response = await fetch('/credit', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await response.json();
+                console.log('Credits:', data.credits);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        }
+
+        async function addTokenToRequests() {
+            const token = getToken();
+            if (!token) {
+                console.error('Token not found');
+                return;
+            }
+
+
+            const headers = new Headers();
+            headers.append('Authorization', `Bearer ${token}`);
+            fetch('/credit.html', {
+                headers: headers
+            });
+
+
+        }
+
+
+        window.onload = addTokenToRequests;
+
+    </script>
+</head>
+<body>
+<h1>Credit Page</h1>
+<button onclick="getCredit()">Check Credits</button>
+</body>
+</html>
