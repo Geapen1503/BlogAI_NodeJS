@@ -64,6 +64,25 @@
             text-align: center;
             margin-top: 20px;
         }
+
+        select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #fff;
+            font-size: 16px;
+        }
+
+        select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        select option {
+            padding: 10px;
+        }
     </style>
 </head>
 <body>
@@ -83,6 +102,12 @@
         <label for="maxTokens">Max Tokens:</label>
         <input type="number" id="maxTokens" name="maxTokens" min="1" max="20000" value="500" required>
 
+        <label for="gptModel">GPT Model:</label>
+        <select name="gptModels" id="gptModel">
+            <option value="GPT3_5">GPT 3.5</option>
+            <option value="GPT4">GPT 4</option>
+        </select>
+
         <button type="submit">Generate Article</button>
     </form>
     <div id="loading" class="loading">
@@ -100,6 +125,7 @@
         const description = document.getElementById('description').value;
         const includeImages = document.getElementById('includeImages').checked;
         const maxTokens = document.getElementById('maxTokens').value;
+        const gptModel = document.getElementById('gptModel').value;
 
         const loadingIndicator = document.getElementById('loading');
         const resultDiv = document.getElementById('result');
@@ -111,13 +137,14 @@
         console.log('Description:', description);
         console.log('Include Images:', includeImages);
         console.log('Max Tokens:', maxTokens);
+        console.log('GPT Model:', gptModel);
 
         const response = await fetch('/blog/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ subject, description, includeImages, maxTokens })
+            body: JSON.stringify({ subject, description, includeImages, maxTokens, gptModel })
         });
 
         try {

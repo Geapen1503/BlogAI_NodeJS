@@ -84,7 +84,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
 router.post('/generate', async (req, res) => {
-    const { subject, description, includeImages, maxTokens } = req.body;
+    const { subject, description, includeImages, maxTokens, gptModel } = req.body;
 
     if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject and description are required' });
 
@@ -94,19 +94,53 @@ router.post('/generate', async (req, res) => {
         console.log('Description:', description);
         console.log('Include Images:', includeImages);
         console.log('Max Tokens:', maxTokens);
+        console.log('GPT Model:', gptModel);
 
         const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}. The post should include titles and subtitles. Use HTML tags like h1, h2, h3, p to format the text. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
 
         console.log('Generating text content...');
+        let gptModelUrl = '';
+        let data = {};
+
+        switch (gptModel) {
+            case 'GPT3_5':
+                gptModelUrl = 'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions';
+                data = {
+                    prompt: textPrompt,
+                    max_tokens: parseInt(maxTokens, 10),
+                    n: 1,
+                    stop: ["\n\n\n\n"],
+                    temperature: 0.7,
+                };
+                break;
+            case 'GPT4':
+                gptModelUrl = 'https://api.openai.com/v1/chat/completions';
+                data = {
+                    model: 'gpt-4',
+                    messages: [
+                        { role: 'system', content: 'You are a helpful assistant.' },
+                        { role: 'user', content: textPrompt }
+                    ],
+                    max_tokens: parseInt(maxTokens, 10),
+                    n: 1,
+                    stop: ["\n\n\n\n"],
+                    temperature: 0.7,
+                };
+                break;
+            default:
+                gptModelUrl = 'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions';
+                data = {
+                    prompt: textPrompt,
+                    max_tokens: parseInt(maxTokens, 10),
+                    n: 1,
+                    stop: ["\n\n\n\n"],
+                    temperature: 0.7,
+                };
+        }
+
         const textResponse = await axios.post(
-            'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions',
-            {
-                prompt: textPrompt,
-                max_tokens: parseInt(maxTokens, 10),
-                n: 1,
-                stop: ["\n\n\n\n"],
-                temperature: 0.7,
-            },
+            gptModelUrl,
+            data,
             {
                 headers: {
                     'Content-Type': 'application/json',
@@ -116,7 +150,10 @@ router.post('/generate', async (req, res) => {
         );
 
 
-        let article = textResponse.data.choices[0].text.trim();
+        let article = '';
+        if (gptModel === 'GPT4') article = textResponse.data.choices[0].message.content.trim();
+        else article = textResponse.data.choices[0].text.trim();
+
         article = cleanIncompleteSentence(article);
 
         console.log('Text content generated.');

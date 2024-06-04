@@ -40,7 +40,6 @@ const router = express.Router();
  */
 
 
-
 router.get('/', (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ message: 'User not logged in' });
