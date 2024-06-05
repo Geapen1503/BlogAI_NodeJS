@@ -21,6 +21,8 @@ const { User } = require('../db/db');
  *             properties:
  *               priceId:
  *                 type: string
+ *                 description: The ID of the price to be used in the checkout session.
+ *                 example: price_1I0bZa2eZvKYlo2CUxPwnZ9J
  *     responses:
  *       '200':
  *         description: Stripe session created successfully.
@@ -31,10 +33,28 @@ const { User } = require('../db/db');
  *               properties:
  *                 url:
  *                   type: string
+ *                   description: The URL of the created Stripe session.
+ *                   example: https://checkout.stripe.com/pay/cs_test_a1b2c3d4e5f6g7h8i9j0k
  *       '401':
  *         description: User not logged in.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not logged in
  *       '500':
  *         description: Internal server error.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error creating Stripe session
  */
 
 
@@ -46,7 +66,7 @@ router.post('/create-session', async (req, res) => {
     if (!session.user) return res.status(401).json({ message: 'User not logged in' });
 
     try {
-        const stripeSession = await stripe.checkout.sessions.create({
+        const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [{
                 price: priceId,
@@ -54,13 +74,10 @@ router.post('/create-session', async (req, res) => {
             }],
             mode: 'payment',
             success_url: `${req.headers.origin}/success.html`,
-            cancel_url: `${req.headers.origin}/cancel.html`,
-            metadata: {
-                userId: session.user.id
-            }
+            cancel_url: `${req.headers.origin}/cancel.html`
         });
 
-        res.json({ url: stripeSession.url });
+        res.json({ url: session.url });
     } catch (error) {
         console.error('Error creating Stripe session:', error);
         res.status(500).json({ message: 'Error creating Stripe session' });

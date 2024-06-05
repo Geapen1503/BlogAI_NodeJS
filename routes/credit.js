@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 
-
 /**
  * @swagger
  * /:
@@ -38,7 +37,6 @@ const router = express.Router();
  *               example:
  *                 message: User not logged in
  */
-
 
 router.get('/', (req, res) => {
     if (!req.session.user) {
