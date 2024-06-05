@@ -5,6 +5,25 @@ const express = require('express');
 const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Retrieve AI Blog Products
+ *     description: Retrieve a list of AI Blog Products with their details.
+ *     responses:
+ *       '200':
+ *         description: A JSON array of AI Blog Products.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Product'
+ *       '500':
+ *         description: Internal server error.
+ */
+
 router.get('/', async (req, res) => {
     try {
         const products = await stripe.products.list();

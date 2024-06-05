@@ -5,6 +5,40 @@ const router = express.Router();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const { User } = require('../db/db');
 
+
+/**
+ * @openapi
+ * /create-session:
+ *   post:
+ *     summary: Create a new Stripe checkout session
+ *     description: This endpoint is used to create a new Stripe checkout session for purchasing a product.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               priceId:
+ *                 type: string
+ *     responses:
+ *       '200':
+ *         description: Stripe session created successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 url:
+ *                   type: string
+ *       '401':
+ *         description: User not logged in.
+ *       '500':
+ *         description: Internal server error.
+ */
+
+
+
 router.post('/create-session', async (req, res) => {
     const { priceId } = req.body;
     const session = req.session;
@@ -22,7 +56,7 @@ router.post('/create-session', async (req, res) => {
             success_url: `${req.headers.origin}/success.html`,
             cancel_url: `${req.headers.origin}/cancel.html`,
             metadata: {
-                userId: session.user.id 
+                userId: session.user.id
             }
         });
 

@@ -7,6 +7,42 @@ const { User } = require('../db/db');
 
 const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+
+/**
+ * @swagger
+ * /webhook:
+ *   post:
+ *     summary: Handle Stripe webhook events
+ *     description: This endpoint is used to handle incoming webhook events from Stripe.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               type:
+ *                 type: string
+ *               data:
+ *                 type: object
+ *     responses:
+ *       '200':
+ *         description: Webhook event processed successfully.
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 received:
+ *                   type: boolean
+ *       '400':
+ *         description: Invalid webhook request.
+ *       '500':
+ *         description: Internal server error.
+ */
+
+
+
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
 
