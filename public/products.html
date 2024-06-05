@@ -88,6 +88,7 @@
                     <h3>${product.name}</h3>
                     <p>${product.description}</p>
                     <p>Price: $${(product.price / 100).toFixed(2)}</p>
+                    <p>Credits: ${product.credits}</p>
                     <button onclick="buyProduct('${product.priceId}')">Buy</button>
                 `;
                 productsContainer.appendChild(productElement);
@@ -106,9 +107,7 @@
             window.location.href = url;
         }
 
-
         window.onload = fetchProducts;
-
     </script>
 </head>
 <body>

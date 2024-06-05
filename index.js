@@ -10,6 +10,7 @@ const blogaiRoute = require('./routes/blogai');
 const creditRouter = require('./routes/credit');
 const productsRoutes = require('./routes/products');
 const checkoutRoutes = require('./routes/checkout');
+const webhookRoutes = require('./routes/webhook');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
@@ -54,6 +55,7 @@ app.use('/blog', blogaiRoute);
 app.use('/credits', creditRouter);
 app.use('/products', productsRoutes);
 app.use('/checkout', checkoutRoutes);
+app.use('/webhook', webhookRoutes);
 
 
 app.get('/protected', authenticateJWT, (req, res) => {res.send('This is a protected route'); });

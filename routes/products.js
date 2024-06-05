@@ -10,16 +10,19 @@ router.get('/', async (req, res) => {
         const products = await stripe.products.list();
         const prices = await stripe.prices.list();
 
-        const productDetails = products.data.map(product => {
-            const productPrice = prices.data.find(price => price.product === product.id);
-            return {
-                id: product.id,
-                name: product.name,
-                description: product.description,
-                price: productPrice.unit_amount,
-                priceId: productPrice.id
-            };
-        });
+        const productDetails = products.data
+            .filter(product => product.metadata.tag === 'BlogAI_Products')
+            .map(product => {
+                const productPrice = prices.data.find(price => price.product === product.id);
+                return {
+                    id: product.id,
+                    name: product.name,
+                    description: product.description,
+                    price: 1000,
+                    priceId: 3,
+                    credits: product.metadata.credits
+                };
+            });
 
         res.json(productDetails);
     } catch (error) {
