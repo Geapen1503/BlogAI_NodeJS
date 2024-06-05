@@ -38,7 +38,7 @@ router.get('/', async (req, res) => {
                     name: product.name,
                     description: product.description,
                     price: 1000,
-                    priceId: 3,
+                    priceId: productPrice.id,
                     credits: product.metadata.credits
                 };
             });
