@@ -172,9 +172,11 @@ router.post('/generate', async (req, res) => {
                     return axios.post(
                         'https://api.openai.com/v1/images/generations',
                         {
+                            model: "dall-e-3",
                             prompt: imagePrompt,
                             n: 1,
                             size: "1024x1024",
+                            quality: "hd",
                         },
                         {
                             headers: {

@@ -36,6 +36,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
  *         description: Internal server error.
  */
 
+
+
 router.get('/', async (req, res) => {
     try {
         const products = await stripe.products.list();
