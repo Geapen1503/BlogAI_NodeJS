@@ -29,11 +29,15 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *         maxTokens:
  *           type: integer
  *           description: The maximum number of tokens for the generated article
+ *         gptModel:
+ *           type: string
+ *           description: The GPT model to use for generating the article (e.g., GPT3_5, GPT4)
  *       example:
  *         subject: The story of a chicken company
  *         description: The impact of chicken on society and daily life.
  *         includeImages: true
  *         maxTokens: 500
+ *         gptModel: GPT4
  *     GenerateArticleResponse:
  *       type: object
  *       properties:
