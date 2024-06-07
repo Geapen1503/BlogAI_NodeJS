@@ -18,8 +18,8 @@ const { sequelize } = require('./db/db');
 const initializeProducts = require('./config/initializeProducts');
 
 
-
 dotenv.config();
+
 
 const app = express();
 const port = process.env.PORT || 3000;
@@ -56,17 +56,19 @@ app.use('/credits', creditRouter);
 app.use('/products', productsRoutes);
 app.use('/checkout', checkoutRoutes);
 app.use('/webhook', webhookRoutes);
+app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 app.get('/protected', authenticateJWT, (req, res) => {res.send('This is a protected route'); });
 
-app.use(express.static(path.join(__dirname, 'public')));
+
 
 
 swaggerConfig(app);
-
-
 initializeProducts();
+
+
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);

@@ -5,7 +5,6 @@ const router = express.Router();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
-
 /**
  * @swagger
  * components:
@@ -26,6 +25,9 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *         includeImages:
  *           type: boolean
  *           description: Whether to include images in the blog post
+ *         numImages:
+ *           type: integer
+ *           description: The number of images to include in the blog post
  *         maxTokens:
  *           type: integer
  *           description: The maximum number of tokens for the generated article
@@ -36,6 +38,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *         subject: The story of a chicken company
  *         description: The impact of chicken on society and daily life.
  *         includeImages: true
+ *         numImages: 3
  *         maxTokens: 500
  *         gptModel: GPT4
  *     GenerateArticleResponse:
@@ -87,8 +90,9 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  */
 
 
+
 router.post('/generate', async (req, res) => {
-    const { subject, description, includeImages, maxTokens, gptModel } = req.body;
+    const { subject, description, includeImages, numImages, maxTokens, gptModel } = req.body;
 
     if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject and description are required' });
 
@@ -97,10 +101,11 @@ router.post('/generate', async (req, res) => {
         console.log('Subject:', subject);
         console.log('Description:', description);
         console.log('Include Images:', includeImages);
+        console.log('Number of Images:', numImages);
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
-        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}. The post should include titles and subtitles. Use HTML tags like h1, h2, h3, p to format the text. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
+        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}. The post should include titles and subtitles. Use HTML tags like h1, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
 
         console.log('Generating text content...');
         let gptModelUrl = '';
@@ -164,11 +169,16 @@ router.post('/generate', async (req, res) => {
 
         if (includeImages) {
             console.log('Generating images...');
-            const sections = article.split(/(<h1>|<h2>|<h3>|<p>)/).filter(Boolean);
-            const imagePromises = sections.map((section, index) => {
-                if (section.startsWith('<p>') || section.startsWith('<h2>') || section.startsWith('<h3>')) {
-                    const textContent = section.replace(/<\/?[^>]+(>|$)/g, "").trim();
-                    const imagePrompt = `Generate an illustration that represents the following content: "${textContent}". The illustration should be without text, realistic and relevant to the topic of "${subject}".`;
+            const imgTags = article.match(/<img\b[^>]*>/g) || [];
+            const numTags = Math.min(imgTags.length, numImages);
+
+            const sections = article.split(/(<img\b[^>]*>)/).filter(Boolean);
+            let imgCount = 0;
+
+            const imagePromises = sections.map((section) => {
+                if (section.startsWith('<img') && imgCount < numTags) {
+                    imgCount++;
+                    const imagePrompt = `Generate an illustration that represents the following content: "${subject}". The illustration should be without text, realistic and relevant to the topic of "${subject}".`;
                     return axios.post(
                         'https://api.openai.com/v1/images/generations',
                         {
@@ -186,7 +196,7 @@ router.post('/generate', async (req, res) => {
                         }
                     ).then(response => {
                         const imageUrl = response.data.data[0].url;
-                        return `<img src="${imageUrl}" alt="Generated Illustration" style="width:100%;height:auto;margin-top:20px;">${section}`;
+                        return `<img src="${imageUrl}" alt="Generated Illustration" style="width:100%;height:auto;margin-top:20px;">`;
                     }).catch(error => {
                         console.error('Error generating image:', error.response ? error.response.data : error.message);
                         return section;
@@ -195,6 +205,7 @@ router.post('/generate', async (req, res) => {
                     return Promise.resolve(section);
                 }
             });
+
 
             const sectionsWithImages = await Promise.all(imagePromises);
             article = sectionsWithImages.join('');

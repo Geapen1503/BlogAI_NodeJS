@@ -25,12 +25,13 @@
             display: block;
             margin-top: 10px;
         }
-        input, textarea {
+        input, textarea, select {
             width: 100%;
             padding: 10px;
             margin-top: 5px;
             border: 1px solid #ccc;
             border-radius: 4px;
+            font-size: 16px;
         }
         button {
             width: 100%;
@@ -64,25 +65,6 @@
             text-align: center;
             margin-top: 20px;
         }
-
-        select {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            background-color: #fff;
-            font-size: 16px;
-        }
-
-        select:focus {
-            border-color: #007bff;
-            outline: none;
-        }
-
-        select option {
-            padding: 10px;
-        }
     </style>
 </head>
 <body>
@@ -99,11 +81,14 @@
             <input type="checkbox" id="includeImages" name="includeImages"> Include Images
         </label>
 
+        <label for="numImages">Number of Images:</label>
+        <input type="number" id="numImages" name="numImages" min="1" max="10" value="3">
+
         <label for="maxTokens">Max Tokens:</label>
         <input type="number" id="maxTokens" name="maxTokens" min="1" max="20000" value="500" required>
 
         <label for="gptModel">GPT Model:</label>
-        <select name="gptModels" id="gptModel">
+        <select name="gptModel" id="gptModel">
             <option value="GPT3_5">GPT 3.5</option>
             <option value="GPT4">GPT 4</option>
         </select>
@@ -124,6 +109,7 @@
         const subject = document.getElementById('subject').value;
         const description = document.getElementById('description').value;
         const includeImages = document.getElementById('includeImages').checked;
+        const numImages = document.getElementById('numImages').value;
         const maxTokens = document.getElementById('maxTokens').value;
         const gptModel = document.getElementById('gptModel').value;
 
@@ -136,6 +122,7 @@
         console.log('Subject:', subject);
         console.log('Description:', description);
         console.log('Include Images:', includeImages);
+        console.log('Number of Images:', numImages);
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
@@ -144,7 +131,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ subject, description, includeImages, maxTokens, gptModel })
+            body: JSON.stringify({ subject, description, includeImages, numImages, maxTokens, gptModel })
         });
 
         try {
