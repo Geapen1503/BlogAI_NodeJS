@@ -1,5 +1,6 @@
 const express = require('express');
 const axios = require('axios');
+const GPT3Tokenizer = require('gpt-3-encoder');
 const router = express.Router();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -94,7 +95,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 router.post('/generate', async (req, res) => {
     const { subject, description, includeImages, numImages, maxTokens, gptModel } = req.body;
 
-    if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject and description are required' });
+    if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject, description, and max tokens are required' });
 
     try {
         console.log('Received request to generate article...');
@@ -158,12 +159,16 @@ router.post('/generate', async (req, res) => {
             }
         );
 
-
         let article = '';
         if (gptModel === 'GPT4') article = textResponse.data.choices[0].message.content.trim();
         else article = textResponse.data.choices[0].text.trim();
 
         article = cleanIncompleteSentence(article);
+
+
+        const encodedArticle = GPT3Tokenizer.encode(article);
+        const numTokens = encodedArticle.length;
+        console.log(`Number of tokens used in the generated article: ${numTokens}`);
 
         console.log('Text content generated.');
 
@@ -206,7 +211,6 @@ router.post('/generate', async (req, res) => {
                 }
             });
 
-
             const sectionsWithImages = await Promise.all(imagePromises);
             article = sectionsWithImages.join('');
             console.log('Images generated and inserted into article.');
@@ -220,7 +224,6 @@ router.post('/generate', async (req, res) => {
     }
 });
 
-
 function cleanIncompleteSentence(text) {
     const lastPeriodIndex = text.lastIndexOf('.');
     const lastExclamationIndex = text.lastIndexOf('!');
@@ -232,9 +235,5 @@ function cleanIncompleteSentence(text) {
 
     return text.substring(0, lastPunctuationIndex + 1);
 }
-
-
-
-
 
 module.exports = router;
