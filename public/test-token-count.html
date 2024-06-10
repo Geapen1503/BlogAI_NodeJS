@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Token Count Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1, h2 {
+            text-align: center;
+        }
+        label {
+            display: block;
+            margin-top: 10px;
+        }
+        textarea, select {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 20px;
+            background-color: #007bff;
+            border: none;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .token-test-result {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
+            border-radius: 4px;
+        }
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>Token Count Test</h1>
+    <form id="tokenTestForm">
+        <label for="testText">Text:</label>
+        <textarea id="testText" name="testText" rows="5" required></textarea>
+
+        <label for="testGptModel">GPT Model:</label>
+        <select name="testGptModel" id="testGptModel">
+            <option value="GPT3_5">GPT 3.5</option>
+            <option value="GPT4">GPT 4</option>
+        </select>
+
+        <button type="submit">Test Token Count</button>
+    </form>
+    <div id="tokenLoading" class="loading">
+        <p>Calculating token count and cost, please wait...</p>
+    </div>
+    <div id="tokenTestResult" class="token-test-result"></div>
+</div>
+
+<script>
+    document.getElementById('tokenTestForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const text = document.getElementById('testText').value;
+        const gptModel = document.getElementById('testGptModel').value;
+
+        const tokenLoadingIndicator = document.getElementById('tokenLoading');
+        const tokenTestResultDiv = document.getElementById('tokenTestResult');
+        tokenLoadingIndicator.style.display = 'block';
+        tokenTestResultDiv.innerHTML = '';
+
+        console.log('Sending request to test token count...');
+        console.log('Text:', text);
+        console.log('GPT Model:', gptModel);
+
+        const response = await fetch('/blog/test-token-count', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ text, gptModel })
+        });
+
+        try {
+            const data = await response.json();
+            if (response.ok) {
+                tokenTestResultDiv.innerHTML = `
+                    <h2>Token Count and Cost Estimation:</h2>
+                    <p>Input Tokens: ${data.inputTokens}</p>
+                    <p>Output Tokens: ${data.outputTokens}</p>
+                    <p>Input Cost: ${data.inputCost}</p>
+                    <p>Output Cost: ${data.outputCost}</p>
+                    <p>Total Cost: ${data.totalCost}</p>
+                `;
+            } else {
+                tokenTestResultDiv.innerHTML = `<p style="color: red;">Error: ${data.message}</p>`;
+            }
+
+        } catch (error) {
+            console.error('Error parsing JSON:', error);
+            tokenTestResultDiv.innerHTML = `<p style="color: red;">Error parsing JSON response</p>`;
+        } finally {
+            tokenLoadingIndicator.style.display = 'none';
+        }
+    });
+</script>
+</body>
+</html>

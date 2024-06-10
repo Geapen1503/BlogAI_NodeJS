@@ -148,6 +148,8 @@ router.post('/generate', async (req, res) => {
                 };
         }
 
+        const inputTokens = GPT3Tokenizer.encode(textPrompt).length;
+
         const textResponse = await axios.post(
             gptModelUrl,
             data,
@@ -163,12 +165,28 @@ router.post('/generate', async (req, res) => {
         if (gptModel === 'GPT4') article = textResponse.data.choices[0].message.content.trim();
         else article = textResponse.data.choices[0].text.trim();
 
-        article = cleanIncompleteSentence(article);
+        const outputTokens = GPT3Tokenizer.encode(article).length;
+        console.log(`Input Tokens: ${inputTokens}, Output Tokens: ${outputTokens}`);
 
+        let inputCost = 0;
+        let outputCost = 0;
+        let imageCost = 0;
 
-        const encodedArticle = GPT3Tokenizer.encode(article);
-        const numTokens = encodedArticle.length;
-        console.log(`Number of tokens used in the generated article: ${numTokens}`);
+        if (gptModel === 'GPT3_5') {
+            inputCost = (inputTokens / 1000000) * 1.50;
+            outputCost = (outputTokens / 1000000) * 2.00;
+        } else if (gptModel === 'GPT4') {
+            inputCost = (inputTokens / 1000000) * 10.00;
+            outputCost = (outputTokens / 1000000) * 30.00;
+        }
+
+        if (includeImages) {
+            imageCost = numImages * 0.08;
+        }
+
+        const totalCost = inputCost + outputCost + imageCost;
+        console.log(`Cost: Input - $${inputCost.toFixed(4)}, Output - $${outputCost.toFixed(4)}, Images - $${imageCost.toFixed(4)}, Total - $${totalCost.toFixed(4)}`);
+
 
         console.log('Text content generated.');
 
@@ -221,6 +239,46 @@ router.post('/generate', async (req, res) => {
     } catch (error) {
         console.error('Error generating article:', error.response ? error.response.data : error.message);
         res.status(500).json({ message: 'Error generating article' });
+    }
+});
+
+
+router.post('/test-token-count', (req, res) => {
+    const { text, gptModel } = req.body;
+
+    if (!text || !gptModel) return res.status(400).json({ message: 'Text and GPT model are required' });
+
+    try {
+        const inputTokens = GPT3Tokenizer.encode(text).length;
+
+        const outputTokens = inputTokens;
+
+        let inputCost = 0;
+        let outputCost = 0;
+
+        if (gptModel === 'GPT3_5') {
+            inputCost = (inputTokens / 1000000) * 1.50;
+            outputCost = (outputTokens / 1000000) * 2.00;
+        } else if (gptModel === 'GPT4') {
+            inputCost = (inputTokens / 1000000) * 10.00;
+            outputCost = (outputTokens / 1000000) * 30.00;
+        }
+
+        const totalCost = inputCost + outputCost;
+
+        console.log(`Test - Input Tokens: ${inputTokens}, Output Tokens: ${outputTokens}`);
+        console.log(`Test Cost: Input - $${inputCost.toFixed(4)}, Output - $${outputCost.toFixed(4)}, Total - $${totalCost.toFixed(4)}`);
+
+        res.status(200).json({
+            inputTokens,
+            outputTokens,
+            inputCost: `$${inputCost.toFixed(4)}`,
+            outputCost: `$${outputCost.toFixed(4)}`,
+            totalCost: `$${totalCost.toFixed(4)}`
+        });
+    } catch (error) {
+        console.error('Error in test-token-count:', error.message);
+        res.status(500).json({ message: 'Error calculating token count and cost' });
     }
 });
 
