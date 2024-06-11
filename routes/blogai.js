@@ -1,6 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const GPT3Tokenizer = require('gpt-3-encoder');
+const { User, Tag } = require('../db/db');
 const router = express.Router();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -89,11 +90,72 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *                   type: string
  *                   example: Error generating article
  */
+/**
+ * @swagger
+ * /blog/test-token-count:
+ *   post:
+ *     summary: Test token count and cost estimation
+ *     tags: [Blog]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               text:
+ *                 type: string
+ *                 description: The text to test token count
+ *               gptModel:
+ *                 type: string
+ *                 description: The GPT model to use for testing (e.g., GPT3_5, GPT4)
+ *             example:
+ *               text: Write a detailed blog post about the impact of technology on education.
+ *               gptModel: GPT4
+ *     responses:
+ *       200:
+ *         description: The token count and estimated cost
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 inputTokens:
+ *                   type: integer
+ *                   description: The number of input tokens
+ *                 outputTokens:
+ *                   type: integer
+ *                   description: The number of output tokens (assumed to be the same as input for estimation)
+ *                 inputCost:
+ *                   type: string
+ *                   description: The cost of input tokens
+ *                 outputCost:
+ *                   type: string
+ *                   description: The cost of output tokens
+ *                 totalCost:
+ *                   type: string
+ *                   description: The total cost of input and output tokens
+ *       400:
+ *         description: Bad request
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Text and GPT model are required
+ */
+
 
 
 
 router.post('/generate', async (req, res) => {
     const { subject, description, includeImages, numImages, maxTokens, gptModel } = req.body;
+
+    if (!req.session.user) return res.status(401).json({ message: 'User not logged in' });
+    // const userId = req.session.user.id;
+
 
     if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject, description, and max tokens are required' });
 
@@ -106,7 +168,15 @@ router.post('/generate', async (req, res) => {
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
-        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}. The post should include titles and subtitles. Use HTML tags like h1, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
+        //const user = await User.findByPk(userId);
+        //if (!user) return res.status(404).json({ message: 'User not found' });
+        const user = req.session.user.tags;
+
+        const previousTags = JSON.parse(user || '[]');
+        const tagsString = previousTags.length ? ` Make sure the post is different from previous topics: ${previousTags.join(', ')}.` : '';
+
+
+        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}.${tagsString} The post should include titles and subtitles. Use HTML tags like h1, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
 
         console.log('Generating text content...');
         let gptModelUrl = '';
@@ -114,7 +184,8 @@ router.post('/generate', async (req, res) => {
 
         switch (gptModel) {
             case 'GPT3_5':
-                gptModelUrl = 'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions';
+                //gptModelUrl = 'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions';
+                gptModelUrl = 'https://api.pawan.krd/v1/chat/completions';
                 data = {
                     prompt: textPrompt,
                     max_tokens: parseInt(maxTokens, 10),
@@ -235,10 +306,53 @@ router.post('/generate', async (req, res) => {
         }
 
         console.log('Generated article:', article);
+
+        const tagsPrompt = `Generate 5 tags that best describe the following article:\n\n${article}\n\nTags:`;
+        const tagsResponse = await axios.post(
+            'https://api.openai.com/v1/engines/davinci/completions',
+            {
+                prompt: tagsPrompt,
+                max_tokens: 20,
+                n: 1,
+                stop: ["\n"],
+                temperature: 0.7,
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                },
+            }
+        );
+
+        const tagsText = tagsResponse.data.choices[0].text.trim();
+        const tags = tagsText.split(',').map(tag => tag.trim());
+
+        const updatedTags = [...new Set([...previousTags, ...tags])];
+        user.tags = JSON.stringify(updatedTags);
+        await user.save();
+
         res.status(200).json({ article });
     } catch (error) {
         console.error('Error generating article:', error.response ? error.response.data : error.message);
         res.status(500).json({ message: 'Error generating article' });
+    }
+});
+
+
+router.get('/tags', async (req, res) => {
+    const userId = req.session.user && req.session.user.id;
+
+    if (!userId) {
+        return res.status(400).json({ message: 'User ID is required' });
+    }
+
+    try {
+        const tags = await Tag.findAll({ where: { userId } });
+        res.status(200).json(tags);
+    } catch (error) {
+        console.error('Error fetching tags:', error.message);
+        res.status(500).json({ message: 'Error fetching tags' });
     }
 });
 
