@@ -57,7 +57,7 @@ app.use('/credits', creditRouter);
 app.use('/products', productsRoutes);
 app.use('/checkout', checkoutRoutes);
 app.use('/webhook', webhookRoutes);
-app.use('/displayTags', displayTagsRoutes);
+app.use('/display', displayTagsRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 
 

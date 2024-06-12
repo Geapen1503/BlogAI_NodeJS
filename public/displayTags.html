@@ -45,8 +45,11 @@
                 }
             });
 
+            const textResponse = await response.text();
+            console.log(`Raw response: ${textResponse}`);
+
             if (response.ok) {
-                const tags = await response.json();
+                const tags = JSON.parse(textResponse);
                 displayTags(tags);
             } else if (response.status === 401) {
                 alert('Please log in to view your tags.');
@@ -63,13 +66,20 @@
         const tagsContainer = document.getElementById('tagsContainer');
         tagsContainer.innerHTML = '';
 
-        tags.forEach(tag => {
-            const tagElement = document.createElement('span');
-            tagElement.classList.add('tag');
-            tagElement.textContent = tag;
-            tagsContainer.appendChild(tagElement);
-        });
+        if (Array.isArray(tags)) {
+            tags.forEach(tag => {
+                const tagElement = document.createElement('span');
+                tagElement.classList.add('tag');
+                tagElement.textContent = tag;
+                tagsContainer.appendChild(tagElement);
+            });
+        } else {
+            const errorElement = document.createElement('p');
+            errorElement.textContent = 'No tags found.';
+            tagsContainer.appendChild(errorElement);
+        }
     }
+
 </script>
 </body>
 </html>

@@ -1,14 +1,5 @@
 const express = require('express');
-const { User } = require('../db/db');
 const router = express.Router();
-
-
-function isAuthenticated(req, res, next) {
-    if (req.session.user) {
-        return next();
-    }
-    return res.status(401).json({ message: 'User not logged in' });
-}
 
 /**
  * @swagger
@@ -25,6 +16,12 @@ function isAuthenticated(req, res, next) {
  *     responses:
  *       200:
  *         description: Tags displayed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: string
  *       401:
  *         description: Unauthorized, user not logged in
  *       404:
@@ -34,18 +31,22 @@ function isAuthenticated(req, res, next) {
  */
 
 
-router.get('/tags', isAuthenticated, async (req, res) => {
+router.get('/tags', (req, res) => {
     try {
-        const userId = req.session.user.id;
-        const user = await User.findByPk(userId);
+        if (!req.session.user) {
+            return res.status(401).json({ error: 'Unauthorized' });
+        }
 
-        if (!user) return res.status(404).json({ message: 'User not found' });
+        const tags = req.session.user.tags;
 
-        const tags = JSON.parse(user.tags || '[]');
-        res.json({ tags });
+        if (!tags) {
+            return res.status(404).json({ error: 'Tags not found' });
+        }
+
+        res.status(200).json(tags);
     } catch (error) {
         console.error('Error fetching tags:', error);
-        res.status(500).json({ message: 'Error fetching tags' });
+        res.status(500).json({ error: 'Error fetching tags' });
     }
 });
 
