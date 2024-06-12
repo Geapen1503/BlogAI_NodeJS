@@ -10,6 +10,29 @@ function isAuthenticated(req, res, next) {
     return res.status(401).json({ message: 'User not logged in' });
 }
 
+/**
+ * @swagger
+ * tags:
+ *   name: DisplayTags
+ *   description: Routes for displaying tags
+ */
+/**
+ * @swagger
+ * /display/tags:
+ *   get:
+ *     summary: Display tags of the connected user
+ *     tags: [DisplayTags]
+ *     responses:
+ *       200:
+ *         description: Tags displayed successfully
+ *       401:
+ *         description: Unauthorized, user not logged in
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Error fetching tags
+ */
+
 
 router.get('/tags', isAuthenticated, async (req, res) => {
     try {
