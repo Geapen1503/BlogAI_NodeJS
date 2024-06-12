@@ -23,7 +23,7 @@ const User = sequelize.define('User', {
     },
     tags: {
         type: DataTypes.TEXT,
-        allowNull: true,
+        allowNull: false,
         defaultValue: '[]'
     }
 });

@@ -135,31 +135,26 @@ router.post('/login', validate(userSchema), async (req, res) => {
     const { username, password } = req.body;
 
     try {
-        console.log('Login attempt:', { username, password });
-
         const user = await User.findOne({ where: { username } });
-        if (!user) {
-            console.log('User not found');
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
+        if (!user) return res.status(400).json({ message: 'Invalid credentials' });
 
         const isPasswordValid = await bcrypt.compare(password, user.password);
-        if (!isPasswordValid) {
-            console.log('Invalid password');
-            return res.status(400).json({ message: 'Invalid credentials' });
-        }
+        if (!isPasswordValid) return res.status(400).json({ message: 'Invalid credentials' });
 
         req.session.user = {
+            id: user.userId,
             username: user.username,
-            credits: user.credits
+            tags: user.tags,
         };
 
-        const token = jwt.sign({ username }, process.env.OPENAI_API_KEY, { expiresIn: '1h' });
+        const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
+
+        res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 
         // useless
-        user.token = token;
+        /*user.token = token;
         await user.save();
-        res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
+        res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });*/
 
         res.json({ token });
     } catch (error) {

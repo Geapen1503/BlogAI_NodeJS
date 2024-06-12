@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const GPT3Tokenizer = require('gpt-3-encoder');
-const { User, Tag } = require('../db/db');
+const { User} = require('../db/db');
 const router = express.Router();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -154,8 +154,8 @@ router.post('/generate', async (req, res) => {
     const { subject, description, includeImages, numImages, maxTokens, gptModel } = req.body;
 
     if (!req.session.user) return res.status(401).json({ message: 'User not logged in' });
-    // const userId = req.session.user.id;
 
+    const userId = req.session.user.id;
 
     if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject, description, and max tokens are required' });
 
@@ -168,11 +168,12 @@ router.post('/generate', async (req, res) => {
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
-        //const user = await User.findByPk(userId);
-        //if (!user) return res.status(404).json({ message: 'User not found' });
-        const user = req.session.user.tags;
 
-        const previousTags = JSON.parse(user || '[]');
+        const user = await User.findByPk(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+        //const user = req.session.user.tags;
+
+        const previousTags = JSON.parse(user.tags || '[]');
         const tagsString = previousTags.length ? ` Make sure the post is different from previous topics: ${previousTags.join(', ')}.` : '';
 
 
@@ -184,8 +185,8 @@ router.post('/generate', async (req, res) => {
 
         switch (gptModel) {
             case 'GPT3_5':
-                //gptModelUrl = 'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions';
-                gptModelUrl = 'https://api.pawan.krd/v1/chat/completions';
+                gptModelUrl = 'https://api.openai.com/v1/engines/gpt-3.5-turbo-instruct/completions';
+                //gptModelUrl = 'https://api.pawan.krd/v1/chat/completions';
                 data = {
                     prompt: textPrompt,
                     max_tokens: parseInt(maxTokens, 10),
@@ -309,7 +310,7 @@ router.post('/generate', async (req, res) => {
 
         const tagsPrompt = `Generate 5 tags that best describe the following article:\n\n${article}\n\nTags:`;
         const tagsResponse = await axios.post(
-            'https://api.openai.com/v1/engines/davinci/completions',
+            'https://api.openai.com/v1/engines/davinci-002/completions',
             {
                 prompt: tagsPrompt,
                 max_tokens: 20,
@@ -320,19 +321,27 @@ router.post('/generate', async (req, res) => {
             {
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${OPENAI_API_KEY}`,
+                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
                 },
             }
         );
 
         const tagsText = tagsResponse.data.choices[0].text.trim();
-        const tags = tagsText.split(',').map(tag => tag.trim());
+        const tags = tagsText.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
 
-        const updatedTags = [...new Set([...previousTags, ...tags])];
-        user.tags = JSON.stringify(updatedTags);
+        const uniqueTags = Array.from(new Set([...previousTags, ...tags]));
+
+        user.tags = JSON.stringify(uniqueTags);
         await user.save();
 
-        res.status(200).json({ article });
+        res.json({
+            article,
+            tags,
+            totalCost,
+            modelUsed: gptModel,
+            inputTokens,
+            outputTokens,
+        });
     } catch (error) {
         console.error('Error generating article:', error.response ? error.response.data : error.message);
         res.status(500).json({ message: 'Error generating article' });
