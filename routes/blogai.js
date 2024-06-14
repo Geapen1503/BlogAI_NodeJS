@@ -7,6 +7,8 @@ const router = express.Router();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
+// reminder : add userId to json params in swagger
+
 /**
  * @swagger
  * components:
@@ -151,11 +153,17 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
 router.post('/generate', async (req, res) => {
-    const { subject, description, includeImages, numImages, maxTokens, gptModel } = req.body;
+    let { subject, description, includeImages, numImages, maxTokens, gptModel, userId = null } = req.body;
+    // techniquement ça marche mais est-ce que tactiquement ça fonctionne ?
 
-    if (!req.session.user) return res.status(401).json({ message: 'User not logged in' });
 
-    const userId = req.session.user.id;
+
+    if (!req.session.user) {
+        console.log('User not logged in');
+        return res.status(401).json({ message: 'User not logged in' });
+    }
+
+    if (userId == null) userId = req.session.user.id;
 
     if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject, description, and max tokens are required' });
 
