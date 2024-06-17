@@ -7,7 +7,7 @@ const router = express.Router();
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
-// reminder : add userId to json params in swagger
+
 
 /**
  * @swagger
@@ -51,6 +51,21 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *         article:
  *           type: string
  *           description: The generated blog article in HTML format
+ *         title:
+ *           type: string
+ *           description: The title of the generated blog article
+ *         totalCost:
+ *           type: string
+ *           description: The total cost of generating the article
+ *         modelUsed:
+ *           type: string
+ *           description: The GPT model used for generating the article
+ *         inputTokens:
+ *           type: integer
+ *           description: The number of input tokens
+ *         outputTokens:
+ *           type: integer
+ *           description: The number of output tokens
  */
 /**
  * @swagger
@@ -81,6 +96,26 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *                 message:
  *                   type: string
  *                   example: Subject, description, and max tokens are required
+ *       401:
+ *         description: Unauthorized
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not logged in
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User not found
  *       500:
  *         description: Internal server error
  *         content:
