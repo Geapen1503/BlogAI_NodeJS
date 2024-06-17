@@ -21,7 +21,7 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false
     },
-    tags: {
+    titles: {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]'

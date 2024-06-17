@@ -154,7 +154,6 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 router.post('/generate', async (req, res) => {
     let { subject, description, includeImages, numImages, maxTokens, gptModel, userId = null } = req.body;
-    // techniquement ça marche mais est-ce que tactiquement ça fonctionne ?
 
 
 
@@ -176,16 +175,15 @@ router.post('/generate', async (req, res) => {
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
-
         const user = await User.findByPk(userId);
         if (!user) return res.status(404).json({ message: 'User not found' });
         //const user = req.session.user.tags;
 
-        const previousTags = JSON.parse(user.tags || '[]');
-        const tagsString = previousTags.length ? ` Make sure the post is different from previous topics: ${previousTags.join(', ')}.` : '';
+        const previousTitles = JSON.parse(user.titles || '[]');
+        const titlesString = previousTitles.length ? ` Make sure the post is different from previous topics: ${previousTitles.join(', ')}.` : '';
 
+        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}.${titlesString} The post should include a clear and concise title followed by the content. Use HTML tags like h1 for the title, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
 
-        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}.${tagsString} The post should include titles and subtitles. Use HTML tags like h1, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
 
         console.log('Generating text content...');
         let gptModelUrl = '';
@@ -260,9 +258,8 @@ router.post('/generate', async (req, res) => {
             outputCost = (outputTokens / 1000000) * 30.00;
         }
 
-        if (includeImages) {
-            imageCost = numImages * 0.08;
-        }
+        if (includeImages) imageCost = numImages * 0.08;
+
 
         const totalCost = inputCost + outputCost + imageCost;
         console.log(`Cost: Input - $${inputCost.toFixed(4)}, Output - $${outputCost.toFixed(4)}, Images - $${imageCost.toFixed(4)}, Total - $${totalCost.toFixed(4)}`);
@@ -316,35 +313,17 @@ router.post('/generate', async (req, res) => {
 
         console.log('Generated article:', article);
 
-        const tagsPrompt = `Generate 5 tags that best describe the following article:\n\n${article}\n\nTags:`;
-        const tagsResponse = await axios.post(
-            'https://api.openai.com/v1/engines/davinci-002/completions',
-            {
-                prompt: tagsPrompt,
-                max_tokens: 20,
-                n: 1,
-                stop: ["\n"],
-                temperature: 0.7,
-            },
-            {
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
-                },
-            }
-        );
+        const titleMatch = article.match(/<h1>(.*?)<\/h1>/);
+        const title = titleMatch ? titleMatch[1] : 'Untitled';
 
-        const tagsText = tagsResponse.data.choices[0].text.trim();
-        const tags = tagsText.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+        const uniqueTitles = Array.from(new Set([...previousTitles, title]));
 
-        const uniqueTags = Array.from(new Set([...previousTags, ...tags]));
-
-        user.tags = JSON.stringify(uniqueTags);
+        user.titles = JSON.stringify(uniqueTitles);
         await user.save();
 
         res.json({
             article,
-            tags,
+            title,
             totalCost,
             modelUsed: gptModel,
             inputTokens,
