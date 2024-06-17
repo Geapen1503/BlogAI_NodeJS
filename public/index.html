@@ -71,9 +71,6 @@
 <div class="container">
     <h1>Blog Article Generator</h1>
     <form id="blogForm">
-        <label for="subject">Subject:</label>
-        <input type="text" id="subject" name="subject" required>
-
         <label for="description">Description:</label>
         <textarea id="description" name="description" rows="5" required></textarea>
 
@@ -106,7 +103,6 @@
     document.getElementById('blogForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
-        const subject = document.getElementById('subject').value;
         const description = document.getElementById('description').value;
         const includeImages = document.getElementById('includeImages').checked;
         const numImages = document.getElementById('numImages').value;
@@ -119,7 +115,6 @@
         resultDiv.innerHTML = '';
 
         console.log('Sending request to generate article...');
-        console.log('Subject:', subject);
         console.log('Description:', description);
         console.log('Include Images:', includeImages);
         console.log('Number of Images:', numImages);
@@ -131,7 +126,7 @@
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ subject, description, includeImages, numImages, maxTokens, gptModel })
+            body: JSON.stringify({ description, includeImages, numImages, maxTokens, gptModel })
         });
 
         try {

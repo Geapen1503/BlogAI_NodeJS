@@ -16,13 +16,9 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *     GenerateArticleRequest:
  *       type: object
  *       required:
- *         - subject
  *         - description
  *         - maxTokens
  *       properties:
- *         subject:
- *           type: string
- *           description: The subject of the blog post
  *         description:
  *           type: string
  *           description: The detailed description of the blog post
@@ -39,7 +35,6 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *           type: string
  *           description: The GPT model to use for generating the article (e.g., GPT3_5, GPT4)
  *       example:
- *         subject: The story of a chicken company
  *         description: The impact of chicken on society and daily life.
  *         includeImages: true
  *         numImages: 3
@@ -95,7 +90,7 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *               properties:
  *                 message:
  *                   type: string
- *                   example: Subject, description, and max tokens are required
+ *                   example: Description and max tokens are required
  *       401:
  *         description: Unauthorized
  *         content:
@@ -187,8 +182,9 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
 
+
 router.post('/generate', async (req, res) => {
-    let { subject, description, includeImages, numImages, maxTokens, gptModel, userId = null } = req.body;
+    let { description, includeImages, numImages, maxTokens, gptModel, userId = null } = req.body;
 
 
 
@@ -199,11 +195,10 @@ router.post('/generate', async (req, res) => {
 
     if (userId == null) userId = req.session.user.id;
 
-    if (!subject || !description || !maxTokens) return res.status(400).json({ message: 'Subject, description, and max tokens are required' });
+    if (!description || !maxTokens) return res.status(400).json({ message: 'description, and max tokens are required' });
 
     try {
         console.log('Received request to generate article...');
-        console.log('Subject:', subject);
         console.log('Description:', description);
         console.log('Include Images:', includeImages);
         console.log('Number of Images:', numImages);
@@ -217,7 +212,7 @@ router.post('/generate', async (req, res) => {
         const previousTitles = JSON.parse(user.titles || '[]');
         const titlesString = previousTitles.length ? ` Make sure the post is different from previous topics: ${previousTitles.join(', ')}.` : '';
 
-        const textPrompt = `Write a detailed blog post about the subject: ${subject}. Description: ${description}.${titlesString} The post should include a clear and concise title followed by the content. Use HTML tags like h1 for the title, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
+        const textPrompt = `Write a detailed blog post about the description: ${description}.${titlesString} The post should include a clear and concise title followed by the content. Use HTML tags like h1 for the title, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
 
 
         console.log('Generating text content...');
@@ -313,7 +308,7 @@ router.post('/generate', async (req, res) => {
             const imagePromises = sections.map((section) => {
                 if (section.startsWith('<img') && imgCount < numTags) {
                     imgCount++;
-                    const imagePrompt = `Generate an illustration that represents the following content: "${subject}". The illustration should be without text, realistic and relevant to the topic of "${subject}".`;
+                    const imagePrompt = `Generate an illustration that represents the following content: "${description}". The illustration should be without text, realistic and relevant to the topic of "${description}".`;
                     return axios.post(
                         'https://api.openai.com/v1/images/generations',
                         {
