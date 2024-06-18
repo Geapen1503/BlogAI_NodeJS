@@ -146,6 +146,7 @@ router.post('/login', validate(userSchema), async (req, res) => {
         req.session.user = {
             id: user.userId,
             username: user.username,
+            credits: user.credits,
             tags: user.tags,
         };
 

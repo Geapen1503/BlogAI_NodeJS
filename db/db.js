@@ -21,6 +21,11 @@ const User = sequelize.define('User', {
         type: DataTypes.STRING,
         allowNull: false
     },
+    credits: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        defaultValue: 0
+    },
     titles: {
         type: DataTypes.TEXT,
         allowNull: false,
