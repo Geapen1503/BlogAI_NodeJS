@@ -12,6 +12,7 @@ const productsRoutes = require('./routes/products');
 const checkoutRoutes = require('./routes/checkout');
 const webhookRoutes = require('./routes/webhook');
 const displayTagsRoutes = require('./routes/displayTags');
+const generationRoutes = require('./routes/generations');
 const cookieParser = require('cookie-parser');
 const session = require('express-session');
 const SequelizeStore = require('connect-session-sequelize')(session.Store);
@@ -58,6 +59,7 @@ app.use('/products', productsRoutes);
 app.use('/checkout', checkoutRoutes);
 app.use('/webhook', webhookRoutes);
 app.use('/display', displayTagsRoutes);
+app.use('/generations', generationRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(path.join(__dirname, 'docs')));
 

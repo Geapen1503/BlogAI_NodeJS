@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generations</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const response = await fetch('/generations', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                credentials: 'include'
+            });
+
+            const generationsList = document.getElementById('generationsList');
+
+            if (response.ok) {
+                const generations = await response.json();
+                generations.forEach(generation => {
+                    const li = document.createElement('li');
+                    li.textContent = generation.title;
+                    generationsList.appendChild(li);
+                });
+            } else {
+                generationsList.textContent = 'Error retrieving generations';
+            }
+        });
+
+    </script>
+</head>
+<body>
+<h1>Generations</h1>
+<ul id="generationsList"></ul>
+</body>
+</html>

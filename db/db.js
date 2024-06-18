@@ -38,10 +38,38 @@ const User = sequelize.define('User', {
     }
 });
 
+const Generation = sequelize.define('Generation', {
+    idPost: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    title: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    description: {
+        type: DataTypes.TEXT,
+        allowNull: false
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: User,
+            key: 'userId'
+        }
+    }
+});
+
+
+User.hasMany(Generation, { foreignKey: 'userId' });
+Generation.belongsTo(User, { foreignKey: 'userId' });
+
 
 sequelize.sync();
 
 module.exports = {
     sequelize,
-    User
+    User,
+    Generation
 };
