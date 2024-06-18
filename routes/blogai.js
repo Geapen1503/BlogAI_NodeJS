@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const GPT3Tokenizer = require('gpt-3-encoder');
-const { User} = require('../db/db');
+const { User, Generation} = require('../db/db');
 const router = express.Router();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -351,6 +351,12 @@ router.post('/generate', async (req, res) => {
         user.titles = JSON.stringify(uniqueTitles);
         await user.save();
 
+        await Generation.create({
+            title: title,
+            description: article,
+            userId: req.session.user.id,
+        });
+
         res.json({
             article,
             title,
@@ -433,5 +439,7 @@ function cleanIncompleteSentence(text) {
 
     return text.substring(0, lastPunctuationIndex + 1);
 }
+
+
 
 module.exports = router;

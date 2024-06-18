@@ -54,10 +54,8 @@ const Generation = sequelize.define('Generation', {
     },
     userId: {
         type: DataTypes.INTEGER,
-        references: {
-            model: User,
-            key: 'userId'
-        }
+        allowNull: false,
+
     }
 });
 
