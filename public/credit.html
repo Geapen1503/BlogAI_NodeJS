@@ -13,6 +13,7 @@
                 });
                 const data = await response.json();
                 document.getElementById('username').textContent = data.username;
+                document.getElementById('mail').textContent = data.mail;
                 document.getElementById('credits').textContent = data.credits;
             } catch (error) {
                 console.error('Error:', error);
@@ -25,6 +26,7 @@
 <body>
 <h1>Credit Page</h1>
 <p>Welcome, <span id="username"></span>!</p>
+<p>Your e-mail is: <span id="mail"></span></p>
 <p>Your credits: <span id="credits"></span></p>
 <button onclick="getCredit()">Check Credits</button>
 </body>

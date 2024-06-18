@@ -21,6 +21,8 @@
 <form id="registerForm">
     <label for="regUsername">Username:</label>
     <input type="text" id="regUsername" name="username" required>
+    <label for="regMail">E-mail:</label>
+    <input type="email" id="regMail" name="mail">
     <label for="regPassword">Password:</label>
     <input type="password" id="regPassword" name="password" required>
     <button type="submit">Register</button>
@@ -43,13 +45,14 @@
     document.getElementById('registerForm').addEventListener('submit', async function (event) {
         event.preventDefault();
         const username = document.getElementById('regUsername').value;
+        const mail = document.getElementById('regMail').value;
         const password = document.getElementById('regPassword').value;
         const response = await fetch('http://localhost:3000/auth/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ username, password }),
+            body: JSON.stringify({ username, mail, password }),
         });
         const result = await response.json();
         document.getElementById('registerResult').textContent = JSON.stringify(result, null, 2);

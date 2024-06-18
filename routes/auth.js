@@ -19,6 +19,7 @@ const JWT_SECRET = "${process.env.TOKEN_SECRET}";
  *       required:
  *         - username
  *         - password
+ *         - mail
  *       properties:
  *         username:
  *           type: string
@@ -26,9 +27,13 @@ const JWT_SECRET = "${process.env.TOKEN_SECRET}";
  *         password:
  *           type: string
  *           description: The user's password
+ *         mail:
+ *           type: string
+ *           description: The user's email
  *       example:
  *         username: root
  *         password: root
+ *         mail: root@example.com
  */
 /**
  * @swagger
@@ -60,7 +65,7 @@ const JWT_SECRET = "${process.env.TOKEN_SECRET}";
  *                   type: string
  *                   example: User registered successfully
  *       400:
- *         description: The user already exists
+ *         description: The user already exists or email already taken
  *         content:
  *           application/json:
  *             schema:
@@ -68,21 +73,33 @@ const JWT_SECRET = "${process.env.TOKEN_SECRET}";
  *               properties:
  *                 message:
  *                   type: string
- *                   example: User already exists
+ *                   example: User already exists or Email already taken
+ *       500:
+ *         description: Error registering user
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error registering user
  */
 
 
 
 router.post('/register', validate(userSchema), async (req, res) => {
-    const { username, password } = req.body;
+    const { username, mail, password } = req.body;
 
     try {
         const userExists = await User.findOne({ where: { username } });
         if (userExists) return res.status(400).json({ message: 'User already exists' });
 
+        const mailExists = await User.findOne({ where: { mail } });
+        if (mailExists) return res.status(400).json({ message: 'Mail already taken' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ username, password: hashedPassword });
+        await User.create({ username, mail, password: hashedPassword });
 
         res.status(201).json({ message: 'User registered successfully' });
     } catch (error) {
@@ -127,6 +144,16 @@ router.post('/register', validate(userSchema), async (req, res) => {
  *                 message:
  *                   type: string
  *                   example: Invalid credentials
+ *       500:
+ *         description: Error logging in
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: Error logging in
  */
 
 
@@ -146,6 +173,7 @@ router.post('/login', validate(userSchema), async (req, res) => {
         req.session.user = {
             id: user.userId,
             username: user.username,
+            mail: user.mail,
             credits: user.credits,
             tags: user.tags,
         };

@@ -18,11 +18,15 @@ const router = express.Router();
  *                 username:
  *                   type: string
  *                   description: The username of the logged-in user
+ *                 mail:
+ *                   type: string
+ *                   description: The email of the logged-in user
  *                 credits:
  *                   type: integer
  *                   description: The credits of the logged-in user
  *               example:
  *                 username: john_doe
+ *                 mail: john_doe@example.com
  *                 credits: 100
  *       401:
  *         description: User not logged in
@@ -38,6 +42,7 @@ const router = express.Router();
  *                 message: User not logged in
  */
 
+
 router.get('/', (req, res) => {
     if (!req.session.user) {
         return res.status(401).json({ message: 'User not logged in' });
@@ -45,6 +50,7 @@ router.get('/', (req, res) => {
 
     res.json({
         username: req.session.user.username,
+        mail: req.session.user.mail,
         credits: req.session.user.credits
     });
 });
