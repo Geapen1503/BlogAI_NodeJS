@@ -59,7 +59,7 @@ app.use('/checkout', checkoutRoutes);
 app.use('/webhook', webhookRoutes);
 app.use('/display', displayTagsRoutes);
 app.use(express.static(path.join(__dirname, 'public')));
-
+app.use(express.static(path.join(__dirname, 'docs')));
 
 
 app.get('/protected', authenticateJWT, (req, res) => {res.send('This is a protected route'); });

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentation</title>
+    <style>
+        body {
+            display: flex;
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        #sidebar {
+            width: 250px;
+            background-color: #1f1f1f;
+            padding: 15px;
+            box-shadow: 2px 0 5px rgba(0, 0, 0, 0.3);
+            height: 100vh;
+            position: fixed;
+            overflow-y: auto;
+        }
+        #sidebar ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        #sidebar ul li {
+            margin: 10px 0;
+        }
+        #sidebar ul li a {
+            text-decoration: none;
+            color: #ccc;
+            display: block;
+            padding: 8px 12px;
+            border-radius: 4px;
+        }
+        #sidebar ul li a:hover {
+            background-color: #333;
+        }
+        #sidebar ul li ul {
+            display: none;
+            list-style-type: none;
+            padding-left: 20px;
+        }
+        #sidebar ul li.active > ul {
+            display: block;
+        }
+        #content {
+            flex: 1;
+            padding: 20px;
+            margin-left: 270px;
+        }
+        .content-section {
+            padding: 20px;
+            margin: 20px 0;
+            background-color: #1f1f1f;
+            border-radius: 8px;
+        }
+        .content-section h1 {
+            color: #ffffff;
+        }
+    </style>
+
+
+</head>
+<body>
+<div id="sidebar">
+    <ul>
+        <li>
+            <a href="#" class="menu-item" data-target="section1">How to set up API</a>
+            <ul>
+            </ul>
+        </li>
+        <li>
+            <a href="#" class="menu-item" data-target="section2">Useful stuff</a>
+            <ul>
+                <li><a href="#" class="submenu-item" data-target="subsection2-1">Max tokens</a></li>
+                <li><a href="#" class="submenu-item" data-target="subsection2-2">Subsection 2.2</a></li>
+            </ul>
+        </li>
+
+
+
+    </ul>
+</div>
+<div id="content">
+    <div id="section1" class="content-section">
+        <h1>How to set up API</h1>
+        <p>
+            <br>- Clone the repository
+            <br>- Then create a .env file with these:
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;PORT=your_port
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;JWT_SECRET=your_jwt_secret
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPENAI_API_KEY=your_openai_key
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;STRIPE_PUBLISHABLE_KEY=your_stripe_pk
+            <br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;STRIPE_SECRET_KEY=your_stripe_sk<br>
+
+
+            <br>- I recommand the PORT 3000.
+            <br>- For the JWT_SECRET you can generate one by running this: node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+            <br>- If you don't have money to afford OPEN_API_KEY you can run one in local with github.com/PawanOsman/ChatGPT</p>
+    </div>
+
+
+
+    <div id="section2" class="content-section" style="display: none;">
+        <h1>Useful stuff</h1>
+        <p>Here is some tips about the project you won't find in the Swagger</p>
+    </div>
+    <div id="subsection2-1" class="content-section" style="display: none;">
+        <h1>Max tokens</h1>
+        <p> You need to handle the min/max Token in the Front because the API won't handle that. It is important to
+            pay attention to it because when your number of tokens is too low the article will stop brutally, you
+            do not want that.
+        </p>
+    </div>
+    <div id="subsection2-2" class="content-section" style="display: none;">
+        <h1>Subsection 2.2</h1>
+        <p>Content of Subsection 2.2.</p>
+    </div>
+
+
+
+</div>
+<script>
+    document.querySelectorAll('.menu-item').forEach(item => {
+        item.addEventListener('click', function(event) {
+            event.preventDefault();
+            const parent = this.parentElement;
+            parent.classList.toggle('active');
+
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(this.dataset.target).style.display = 'block';
+        });
+    });
+
+    document.querySelectorAll('.submenu-item').forEach(item => {
+        item.addEventListener('click', function(event) {
+            event.preventDefault();
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            document.getElementById(this.dataset.target).style.display = 'block';
+        });
+    });
+
+    window.addEventListener('scroll', () => {
+        const sections = Array.from(document.querySelectorAll('.content-section'));
+        const scrollPosition = window.scrollY + window.innerHeight / 2;
+
+        let currentSection = sections.find(section => {
+            const rect = section.getBoundingClientRect();
+            return rect.top <= scrollPosition && rect.bottom >= scrollPosition;
+        });
+
+        if (currentSection) {
+            sections.forEach(section => section.style.display = 'none');
+            currentSection.style.display = 'block';
+        }
+    });
+</script>
+</body>
+</html>
