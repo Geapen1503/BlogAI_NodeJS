@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Key Management</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+        h2 {
+            text-align: center;
+        }
+        .api-keys {
+            margin-top: 20px;
+        }
+        .api-keys ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        .api-keys ul li {
+            margin-bottom: 10px;
+        }
+        .generate-key-btn {
+            margin-top: 10px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>API Key Management</h2>
+
+    <div class="api-keys">
+        <h3>Your API Keys:</h3>
+        <ul id="api-keys-list">
+        </ul>
+    </div>
+
+    <button class="generate-key-btn" onclick="generateApiKey()">Generate New API Key</button>
+
+    <p id="message"></p>
+</div>
+
+<script>
+    async function fetchApiKeys() {
+        try {
+            const response = await fetch('/api/keys', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch API keys');
+            }
+
+            const data = await response.json();
+            const apiKeys = data.apiKeys || [];
+
+            const apiKeysList = document.getElementById('api-keys-list');
+            apiKeysList.innerHTML = '';
+            apiKeys.forEach(apiKey => {
+                const li = document.createElement('li');
+                li.textContent = apiKey;
+                apiKeysList.appendChild(li);
+            });
+        } catch (error) {
+            console.error('Error fetching API keys:', error);
+            const message = document.getElementById('message');
+            message.textContent = 'Failed to fetch API keys. Please try again later.';
+        }
+    }
+
+    async function generateApiKey() {
+        try {
+                const response = await fetch('/api/keys', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to generate API key');
+            }
+
+            const data = await response.json();
+            const newApiKey = data.apiKey;
+
+            const apiKeysList = document.getElementById('api-keys-list');
+            const li = document.createElement('li');
+            li.textContent = newApiKey;
+            apiKeysList.appendChild(li);
+
+            const message = document.getElementById('message');
+            message.textContent = 'New API Key generated successfully.';
+        } catch (error) {
+            console.error('Error generating API key:', error);
+            const message = document.getElementById('message');
+            message.textContent = 'Failed to generate API key. Please try again later.';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', fetchApiKeys);
+</script>
+</body>
+</html>
+²
