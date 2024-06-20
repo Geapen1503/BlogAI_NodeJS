@@ -10,8 +10,19 @@ const router = express.Router();
 const JWT_SECRET = "${process.env.TOKEN_SECRET}";
 
 
-function generateApiKey() {
-    return crypto.randomBytes(32).toString('hex');
+async function generateApiKey() {
+    let apiKey;
+    let isUnique = false;
+
+    while (!isUnique) {
+        apiKey = crypto.randomBytes(32).toString('hex');
+        const existingUser = await User.findOne({ where: { apiKey } });
+        if (!existingUser) {
+            isUnique = true;
+        }
+    }
+
+    return apiKey;
 }
 
 
