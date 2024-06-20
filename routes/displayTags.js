@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { User, Generation } = require('../db/db');
 
 /**
  * @swagger
@@ -30,18 +31,19 @@ const router = express.Router();
  *         description: Error fetching tags
  */
 
-
-router.get('/tags', (req, res) => {
+router.get('/tags', async (req, res) => {
     try {
-        if (!req.session.user) {
-            return res.status(401).json({ error: 'Unauthorized' });
-        }
+        if (!req.session.user) return res.status(401).json({ error: 'Unauthorized' });
 
-        const tags = req.session.user.tags;
+        const userId = req.session.user.id;
 
-        if (!tags) {
-            return res.status(404).json({ error: 'Tags not found' });
-        }
+        const user = await User.findByPk(userId);
+
+        if (!user) return res.status(404).json({ error: 'User not found' });
+
+        const tags = JSON.parse(user.titles);
+
+        if (!tags.length) return res.status(404).json({ error: 'Tags not found' });
 
         res.status(200).json(tags);
     } catch (error) {

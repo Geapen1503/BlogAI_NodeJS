@@ -7,7 +7,7 @@ const authRoutes = require('./routes/auth');
 const authenticateJWT = require('./middleware/auth');
 const swaggerConfig = require('./swagger');
 const blogaiRoute = require('./routes/blogai');
-const creditRouter = require('./routes/credit');
+const getMeRoute = require('./routes/getMe');
 const productsRoutes = require('./routes/products');
 const checkoutRoutes = require('./routes/checkout');
 const webhookRoutes = require('./routes/webhook');
@@ -54,7 +54,7 @@ app.use(session({
 
 app.use('/auth', authRoutes);
 app.use('/blog', blogaiRoute);
-app.use('/credits', creditRouter);
+app.use('/get-me', getMeRoute);
 app.use('/products', productsRoutes);
 app.use('/checkout', checkoutRoutes);
 app.use('/webhook', webhookRoutes);

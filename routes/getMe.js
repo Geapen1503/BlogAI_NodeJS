@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
+const { User } = require('../db/db');
 
 /**
  * @swagger
- * /:
+ * /get-me:
  *   get:
  *     summary: Get user information
  *     tags: [User]
@@ -42,17 +43,27 @@ const router = express.Router();
  *                 message: User not logged in
  */
 
+router.get('/', async (req, res) => {
+    try {
+        if (!req.session.user) return res.status(401).json({ message: 'User not logged in' });
 
-router.get('/', (req, res) => {
-    if (!req.session.user) {
-        return res.status(401).json({ message: 'User not logged in' });
+        const userId = req.session.user.id;
+
+        const user = await User.findByPk(userId, {
+            attributes: ['username', 'mail', 'credits']
+        });
+
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        res.json({
+            username: user.username,
+            mail: user.mail,
+            credits: user.credits
+        });
+    } catch (error) {
+        console.error('Error fetching user information:', error);
+        res.status(500).json({ message: 'Error fetching user information' });
     }
-
-    res.json({
-        username: req.session.user.username,
-        mail: req.session.user.mail,
-        credits: req.session.user.credits
-    });
 });
 
 module.exports = router;

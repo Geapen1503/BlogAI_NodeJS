@@ -171,18 +171,14 @@ router.post('/login', validate(userSchema), async (req, res) => {
         if (!isPasswordValid) return res.status(400).json({ message: 'Invalid credentials' });
 
         req.session.user = {
-            id: user.userId,
-            username: user.username,
-            mail: user.mail,
-            credits: user.credits,
-            tags: user.tags,
+            id: user.userId
         };
 
         const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
 
-        res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });
 
         // useless
+        // res.cookie('token', token, { httpOnly: true, secure: false });
         /*user.token = token;
         await user.save();
         res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });*/
