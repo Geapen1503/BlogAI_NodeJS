@@ -1,7 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../db/db');
+const { User, ApiKey} = require('../db/db');
 const { userSchema } = require('../schemas/userSchema');
 const validate = require('../middleware/validate');
 const crypto = require('crypto');
@@ -16,8 +16,8 @@ async function generateApiKey() {
 
     while (!isUnique) {
         apiKey = crypto.randomBytes(32).toString('hex');
-        const existingUser = await User.findOne({ where: { apiKey } });
-        if (!existingUser) {
+        const existingApiKey = await ApiKey.findOne({ where: { key: apiKey } });
+        if (!existingApiKey) {
             isUnique = true;
         }
     }
@@ -118,8 +118,10 @@ router.post('/register', validate(userSchema), async (req, res) => {
         if (mailExists) return res.status(400).json({ message: 'Mail already taken' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        const apiKey = generateApiKey();
-        await User.create({ username, mail, password: hashedPassword, apiKey });
+        const newUser = await User.create({ username, mail, password: hashedPassword });
+
+        const apiKey = await generateApiKey();
+        await ApiKey.create({ key: apiKey, userId: newUser.userId });
 
         res.status(201).json({ message: 'User registered successfully', apiKey });
 

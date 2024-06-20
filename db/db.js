@@ -35,11 +35,18 @@ const User = sequelize.define('User', {
         type: DataTypes.TEXT,
         allowNull: false,
         defaultValue: '[]'
-    },
-    apiKey: {
+    }
+});
+
+const ApiKey = sequelize.define('ApiKey', {
+    key: {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true
+    },
+    userId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
     }
 });
 
@@ -60,19 +67,20 @@ const Generation = sequelize.define('Generation', {
     userId: {
         type: DataTypes.INTEGER,
         allowNull: false,
-
     }
 });
-
 
 User.hasMany(Generation, { foreignKey: 'userId' });
 Generation.belongsTo(User, { foreignKey: 'userId' });
 
+User.hasMany(ApiKey, { foreignKey: 'userId' });
+ApiKey.belongsTo(User, { foreignKey: 'userId' });
 
 sequelize.sync();
 
 module.exports = {
     sequelize,
     User,
+    ApiKey,
     Generation
 };

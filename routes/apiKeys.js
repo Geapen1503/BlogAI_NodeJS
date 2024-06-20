@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { User } = require('../db/db');
+const { User, ApiKey } = require('../db/db');
 const crypto = require('crypto');
 
 
@@ -16,21 +16,21 @@ async function generateApiKey() {
 
     while (!isUnique) {
         apiKey = crypto.randomBytes(32).toString('hex');
-        const existingUser = await User.findOne({ where: { apiKey } });
+        const existingApiKey = await ApiKey.findOne({ where: { key: apiKey } });
 
-        if (!existingUser) isUnique = true;
+        if (!existingApiKey) isUnique = true;
     }
 
     return apiKey;
 }
-
 
 router.get('/keys', isAuthenticated, async (req, res) => {
     try {
         const user = await User.findOne({ where: { userId: req.session.user.id } });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        res.json({ apiKeys: user.apiKeys });
+        const apiKeys = await ApiKey.findAll({ where: { userId: user.userId } });
+        res.json({ apiKeys: apiKeys.map(key => key.key) });
     } catch (error) {
         console.error('Error fetching API keys:', error);
         res.status(500).json({ message: 'Internal server error' });
@@ -43,12 +43,8 @@ router.post('/keys', isAuthenticated, async (req, res) => {
         const user = await User.findOne({ where: { userId: req.session.user.id } });
         if (!user) return res.status(404).json({ message: 'User not found' });
 
-        const newApiKey = generateApiKey();
-
-        if (!user.apiKeys) user.apiKeys = [];
-        user.apiKeys.push(newApiKey);
-
-        await user.save();
+        const newApiKey = await generateApiKey();
+        await ApiKey.create({ key: newApiKey, userId: user.userId });
 
         res.json({ apiKey: newApiKey });
     } catch (error) {
