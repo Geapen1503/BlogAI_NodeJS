@@ -90,6 +90,9 @@
             <option value="GPT4">GPT 4</option>
         </select>
 
+        <label for="apiKey">API Key (optional):</label>
+        <input type="text" id="apiKey" name="apiKey">
+
         <button type="submit">Generate Article</button>
     </form>
     <div id="loading" class="loading">
@@ -97,7 +100,6 @@
     </div>
     <div id="result" class="result"></div>
 </div>
-
 
 <script>
     document.getElementById('blogForm').addEventListener('submit', async function(e) {
@@ -108,6 +110,7 @@
         const numImages = document.getElementById('numImages').value;
         const maxTokens = document.getElementById('maxTokens').value;
         const gptModel = document.getElementById('gptModel').value;
+        const apiKey = document.getElementById('apiKey').value;
 
         const loadingIndicator = document.getElementById('loading');
         const resultDiv = document.getElementById('result');
@@ -120,20 +123,28 @@
         console.log('Number of Images:', numImages);
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
+        console.log('API Key:', apiKey);
+
+        const requestBody = { description, maxTokens, gptModel };
+        if (includeImages) requestBody.includeImages = includeImages;
+        if (numImages) requestBody.numImages = numImages;
+        if (apiKey) requestBody.apiKey = apiKey;
 
         const response = await fetch('/blog/generate', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ description, includeImages, numImages, maxTokens, gptModel })
+            body: JSON.stringify(requestBody)
         });
 
         try {
             const data = await response.json();
-            if (response.ok) resultDiv.innerHTML = `<h2>Generated Article:</h2>${data.article}`;
-            else resultDiv.innerHTML = `<p style="color: red;">Error: ${data.message}</p>`;
-
+            if (response.ok) {
+                resultDiv.innerHTML = `<h2>Generated Article:</h2><h3>${data.title}</h3><p>${data.article}</p>`;
+            } else {
+                resultDiv.innerHTML = `<p style="color: red;">Error: ${data.message}</p>`;
+            }
         } catch (error) {
             console.error('Error parsing JSON:', error);
             resultDiv.innerHTML = `<p style="color: red;">Error parsing JSON response</p>`;

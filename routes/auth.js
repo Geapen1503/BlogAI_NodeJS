@@ -4,10 +4,15 @@ const jwt = require('jsonwebtoken');
 const { User } = require('../db/db');
 const { userSchema } = require('../schemas/userSchema');
 const validate = require('../middleware/validate');
+const crypto = require('crypto');
 const router = express.Router();
 
 const JWT_SECRET = "${process.env.TOKEN_SECRET}";
 
+
+function generateApiKey() {
+    return crypto.randomBytes(32).toString('hex');
+}
 
 
 /**
@@ -64,6 +69,9 @@ const JWT_SECRET = "${process.env.TOKEN_SECRET}";
  *                 message:
  *                   type: string
  *                   example: User registered successfully
+ *                 apiKey:
+ *                   type: string
+ *                   example: 123abc...
  *       400:
  *         description: The user already exists or email already taken
  *         content:
@@ -99,9 +107,11 @@ router.post('/register', validate(userSchema), async (req, res) => {
         if (mailExists) return res.status(400).json({ message: 'Mail already taken' });
 
         const hashedPassword = await bcrypt.hash(password, 10);
-        await User.create({ username, mail, password: hashedPassword });
+        const apiKey = generateApiKey();
+        await User.create({ username, mail, password: hashedPassword, apiKey });
 
-        res.status(201).json({ message: 'User registered successfully' });
+        res.status(201).json({ message: 'User registered successfully', apiKey });
+
     } catch (error) {
         console.error('Error registering user:', error);
         res.status(500).json({ message: 'Error registering user' });

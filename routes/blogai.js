@@ -184,18 +184,13 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
 router.post('/generate', async (req, res) => {
-    let { description, includeImages, numImages, maxTokens, gptModel, userId = null } = req.body;
+    const { description, includeImages, numImages, maxTokens, gptModel, apiKey } = req.body;
+    let userRecord = null;
 
-
-
-    if (!req.session.user) {
-        console.log('User not logged in');
-        return res.status(401).json({ message: 'User not logged in' });
-    }
-
-    if (userId == null) userId = req.session.user.id;
 
     if (!description || !maxTokens) return res.status(400).json({ message: 'description, and max tokens are required' });
+
+
 
     try {
         console.log('Received request to generate article...');
@@ -205,9 +200,18 @@ router.post('/generate', async (req, res) => {
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
-        const user = await User.findByPk(userId);
-        if (!user) return res.status(404).json({ message: 'User not found' });
-        //const user = req.session.user.tags;
+        if (req.session && req.session.user) {
+            userRecord = await User.findOne({ where: { userId: req.session.user.id } });
+        } else if (apiKey) {
+            userRecord = await User.findOne({ where: { apiKey } });
+        }
+
+        if (!userRecord) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
+
+        const user = userRecord;
+
 
         const previousTitles = JSON.parse(user.titles || '[]');
         const titlesString = previousTitles.length ? ` Make sure the post is different from previous topics: ${previousTitles.join(', ')}.` : '';
