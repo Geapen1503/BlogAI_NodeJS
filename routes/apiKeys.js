@@ -24,6 +24,104 @@ async function generateApiKey() {
     return apiKey;
 }
 
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ApiKey:
+ *       type: object
+ *       properties:
+ *         key:
+ *           type: string
+ *           description: The API key.
+ *         userId:
+ *           type: integer
+ *           description: ID of the user who owns the API key.
+ *     Error:
+ *       type: object
+ *       properties:
+ *         message:
+ *           type: string
+ *           description: Error message.
+ */
+/**
+ * @swagger
+ * /keys:
+ *   get:
+ *     summary: Get API keys of the authenticated user
+ *     tags: [API Keys]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: List of API keys
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 apiKeys:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       403:
+ *         description: User is not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+/**
+ * @swagger
+ * /keys:
+ *   post:
+ *     summary: Generate a new API key for the authenticated user
+ *     tags: [API Keys]
+ *     security:
+ *       - cookieAuth: []
+ *     responses:
+ *       200:
+ *         description: Newly generated API key
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 apiKey:
+ *                   type: string
+ *       403:
+ *         description: User is not authenticated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       404:
+ *         description: User not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+
 router.get('/keys', isAuthenticated, async (req, res) => {
     try {
         const user = await User.findOne({ where: { userId: req.session.user.id } });
