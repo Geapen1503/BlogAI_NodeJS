@@ -8,7 +8,7 @@ const { User } = require('../db/db');
 
 /**
  * @openapi
- * /create-session:
+ * /checkout/create-session:
  *   post:
  *     summary: Create a new Stripe checkout session
  *     description: This endpoint is used to create a new Stripe checkout session for purchasing a product.

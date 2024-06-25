@@ -10,7 +10,7 @@ const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 /**
  * @swagger
- * /webhook:
+ * /webhook/webhook:
  *   post:
  *     summary: Handle Stripe webhook events
  *     description: This endpoint is used to handle incoming webhook events from Stripe.

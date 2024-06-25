@@ -47,7 +47,7 @@ async function generateApiKey() {
  */
 /**
  * @swagger
- * /keys:
+ * /api/keys:
  *   get:
  *     summary: Get API keys of the authenticated user
  *     tags: [API Keys]
@@ -86,7 +86,7 @@ async function generateApiKey() {
  */
 /**
  * @swagger
- * /keys:
+ * /api/keys:
  *   post:
  *     summary: Generate a new API key for the authenticated user
  *     tags: [API Keys]
@@ -121,6 +121,7 @@ async function generateApiKey() {
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
+
 
 router.get('/keys', isAuthenticated, async (req, res) => {
     try {

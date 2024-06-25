@@ -17,9 +17,7 @@ async function generateApiKey() {
     while (!isUnique) {
         apiKey = crypto.randomBytes(32).toString('hex');
         const existingApiKey = await ApiKey.findOne({ where: { key: apiKey } });
-        if (!existingApiKey) {
-            isUnique = true;
-        }
+        if (!existingApiKey) isUnique = true;
     }
 
     return apiKey;

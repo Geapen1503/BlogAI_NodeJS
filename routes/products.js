@@ -8,7 +8,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 /**
  * @swagger
- * /:
+ * /products/:
  *   get:
  *     summary: Retrieve a list of products
  *     description: Fetches a list of products and their prices from Stripe.

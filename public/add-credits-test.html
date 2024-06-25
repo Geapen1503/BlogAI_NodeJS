@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Credits</title>
+</head>
+<body>
+<h1>Add Credits</h1>
+<div id="login-form">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required><br><br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required><br><br>
+        <button type="submit">Login</button>
+    </form>
+</div>
+<div id="credits-form" style="display: none;">
+    <h2>Add 100 Credits</h2>
+    <button id="addCreditsButton">Add Credits</button>
+    <p id="creditsResult"></p>
+</div>
+<script>
+    document.getElementById('loginForm').addEventListener('submit', async function(event) {
+        event.preventDefault();
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+
+        try {
+            const response = await fetch('/auth/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ username, password })
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('credits-form').style.display = 'block';
+                localStorage.setItem('token', data.token);
+            } else {
+                alert('Login failed: ' + data.message);
+            }
+        } catch (error) {
+            console.error('Error logging in:', error);
+            alert('An error occurred while logging in.');
+        }
+    });
+
+    document.getElementById('addCreditsButton').addEventListener('click', async function() {
+        try {
+            const response = await fetch('/add-credits-test/add-credits', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('token')
+                },
+                credentials: 'include'
+            });
+
+            const data = await response.json();
+
+            if (response.ok) document.getElementById('creditsResult').textContent = 'Credits added successfully. Current credits: ' + data.credits;
+            else document.getElementById('creditsResult').textContent = 'Error: ' + data.message;
+
+        } catch (error) {
+            console.error('Error adding credits:', error);
+            document.getElementById('creditsResult').textContent = 'An error occurred while adding credits.';
+        }
+    });
+</script>
+</body>
+</html>

@@ -111,7 +111,8 @@
         <h1>Max tokens</h1>
         <p> You need to handle the min/max Token in the Front because the API won't handle that. It is important to
             pay attention to it because when your number of tokens is too low the article will stop brutally, you
-            do not want that.
+            do not want that.<br><br> YOU MUST SET MIN TOKEN TO 1000, I've improved the prompt so the article won't
+            stop if maxTokens is higher than 1000. I may add an error to throw, so you can't set it to less than 1000 tokens.
         </p>
     </div>
     <div id="subsection2-2" class="content-section" style="display: none;">

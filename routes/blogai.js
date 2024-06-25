@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const GPT3Tokenizer = require('gpt-3-encoder');
-const { User, Generation} = require('../db/db');
+const { User, Generation, ApiKey} = require('../db/db');
 const router = express.Router();
 
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
@@ -10,57 +10,40 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
 
 /**
- * @swagger
- * components:
- *   schemas:
- *     GenerateArticleRequest:
- *       type: object
- *       required:
- *         - description
- *         - maxTokens
- *       properties:
- *         description:
- *           type: string
- *           description: The detailed description of the blog post
- *         includeImages:
- *           type: boolean
- *           description: Whether to include images in the blog post
- *         numImages:
- *           type: integer
- *           description: The number of images to include in the blog post
- *         maxTokens:
- *           type: integer
- *           description: The maximum number of tokens for the generated article
- *         gptModel:
- *           type: string
- *           description: The GPT model to use for generating the article (e.g., GPT3_5, GPT4)
- *       example:
- *         description: The impact of chicken on society and daily life.
- *         includeImages: true
- *         numImages: 3
- *         maxTokens: 500
- *         gptModel: GPT4
- *     GenerateArticleResponse:
- *       type: object
- *       properties:
- *         article:
- *           type: string
- *           description: The generated blog article in HTML format
- *         title:
- *           type: string
- *           description: The title of the generated blog article
- *         totalCost:
- *           type: string
- *           description: The total cost of generating the article
- *         modelUsed:
- *           type: string
- *           description: The GPT model used for generating the article
- *         inputTokens:
- *           type: integer
- *           description: The number of input tokens
- *         outputTokens:
- *           type: integer
- *           description: The number of output tokens
+ *  @swagger
+ *  components:
+ *    schemas:
+ *      GenerateArticleRequest:
+ *        type: object
+ *        required:
+ *          - description
+ *          - maxTokens
+ *        properties:
+ *          description:
+ *            type: string
+ *            description: The detailed description of the blog post
+ *          includeImages:
+ *            type: boolean
+ *            description: Whether to include images in the blog post
+ *          numImages:
+ *            type: integer
+ *            description: The number of images to include in the blog post
+ *          maxTokens:
+ *            type: integer
+ *            description: The maximum number of tokens for the generated article
+ *          gptModel:
+ *            type: string
+ *            description: The GPT model to use for generating the article (e.g., GPT3_5, GPT4)
+ *          apiKey:
+ *            type: string
+ *            description: The API key for authentication
+ *        example:
+ *          description: The impact of chicken on society and daily life.
+ *          includeImages: true
+ *          numImages: 3
+ *          maxTokens: 500
+ *          gptModel: GPT4
+ *          apiKey: your_api_key_here
  */
 /**
  * @swagger
@@ -101,6 +84,16 @@ const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
  *                 message:
  *                   type: string
  *                   example: User not logged in
+ *       402:
+ *         description: Payment Required
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: User does not have enough credits
  *       404:
  *         description: User not found
  *         content:
@@ -190,6 +183,7 @@ router.post('/generate', async (req, res) => {
 
     if (!description || !maxTokens) return res.status(400).json({ message: 'description, and max tokens are required' });
 
+    if (maxTokens < 1000) return res.status(400).json({ message: 'maxTokens must be at least 1000' });
 
 
     try {
@@ -200,23 +194,32 @@ router.post('/generate', async (req, res) => {
         console.log('Max Tokens:', maxTokens);
         console.log('GPT Model:', gptModel);
 
+
         if (req.session && req.session.user) {
             userRecord = await User.findOne({ where: { userId: req.session.user.id } });
         } else if (apiKey) {
-            userRecord = await User.findOne({ where: { apiKey } });
+            userRecord = await User.findOne({
+                include: {
+                    model: ApiKey,
+                    where: { key: apiKey }
+                }
+            });
         }
 
-        if (!userRecord) {
-            return res.status(403).json({ message: 'Unauthorized' });
-        }
+
+        if (!userRecord) return res.status(403).json({ message: 'Unauthorized' });
+
 
         const user = userRecord;
+
+        if (user.credits >= maxTokens) user.credits -= maxTokens;
+        else return res.status(402).json({ message: 'User do not have enough credits' });
 
 
         const previousTitles = JSON.parse(user.titles || '[]');
         const titlesString = previousTitles.length ? ` Make sure the post is different from previous topics: ${previousTitles.join(', ')}.` : '';
 
-        const textPrompt = `Write a detailed blog post about the description: ${description}.${titlesString} The post should include a clear and concise title followed by the content. Use HTML tags like h1 for the title, h2, h3, p to format the text. Include img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens} tokens.`;
+        const textPrompt = `Write a detailed blog post about the description: ${description}.${titlesString} The post should include a clear and concise title followed by the content. Use HTML tags like h1 for the title, h2, h3, p to format the text. You must include ${numImages} img tags where images would be appropriate. Make sure to conclude the post naturally within ${maxTokens * 0.6} tokens.`;
 
 
         console.log('Generating text content...');
@@ -284,6 +287,104 @@ router.post('/generate', async (req, res) => {
         let outputCost = 0;
         let imageCost = 0;
 
+        const cssStyles = `
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                margin: 0;
+                padding: 0;
+                background-color: #f9f9f9;
+            }
+
+            article {
+                max-width: 800px;
+                margin: 40px auto;
+                padding: 20px;
+                background: #fff;
+                box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+                border-radius: 10px;
+            }
+
+            h1, h2, h3 {
+                margin-top: 20px;
+                color: #333;
+            }
+
+            h1 {
+                font-size: 2em;
+                border-bottom: 2px solid #eaeaea;
+                padding-bottom: 10px;
+            }
+
+            h2 {
+                font-size: 1.5em;
+                margin-top: 30px;
+            }
+
+            h3 {
+                font-size: 1.2em;
+                margin-top: 20px;
+            }
+
+            p {
+                margin: 15px 0;
+            }
+
+            img {
+                display: block;
+                max-width: 100%;
+                height: auto;
+                margin: 20px 0;
+            }
+
+            a {
+                color: #3498db;
+                text-decoration: none;
+            }
+
+            a:hover {
+                text-decoration: underline;
+            }
+
+            ul, ol {
+                margin: 20px 0;
+                padding-left: 40px;
+            }
+
+            blockquote {
+                margin: 20px 0;
+                padding: 10px 20px;
+                background: #f1f1f1;
+                border-left: 5px solid #ccc;
+            }
+
+            code {
+                font-family: "Courier New", Courier, monospace;
+                background: #f4f4f4;
+                padding: 2px 4px;
+                border-radius: 4px;
+            }
+        </style>`;
+
+
+        article = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            ${cssStyles}
+        </head>
+        <body>
+            <article>
+                ${article}
+            </article>
+        </body>
+        </html>`;
+
+
         if (gptModel === 'GPT3_5') {
             inputCost = (inputTokens / 1000000) * 1.50;
             outputCost = (outputTokens / 1000000) * 2.00;
@@ -301,10 +402,12 @@ router.post('/generate', async (req, res) => {
 
         console.log('Text content generated.');
 
+
+
         if (includeImages) {
             console.log('Generating images...');
-            const imgTags = article.match(/<img\b[^>]*>/g) || [];
-            const numTags = Math.min(imgTags.length, numImages);
+            let imgTags = article.match(/<img\b[^>]*>/g) || [];
+            let numTags = imgTags.length;
 
             const sections = article.split(/(<img\b[^>]*>)/).filter(Boolean);
             let imgCount = 0;
@@ -340,10 +443,38 @@ router.post('/generate', async (req, res) => {
                 }
             });
 
-            const sectionsWithImages = await Promise.all(imagePromises);
+            let sectionsWithImages = await Promise.all(imagePromises);
             article = sectionsWithImages.join('');
+
+            imgTags = article.match(/<img\b[^>]*>/g) || [];
+            numTags = imgTags.length;
+            if (numTags < numImages) {
+                for (let i = numTags; i < numImages; i++) {
+                    const imagePrompt = `Generate an illustration that represents the following content: "${description}". The illustration should be without text, realistic and relevant to the topic of "${description}".`;
+                    const response = await axios.post(
+                        'https://api.openai.com/v1/images/generations',
+                        {
+                            model: "dall-e-3",
+                            prompt: imagePrompt,
+                            n: 1,
+                            size: "1024x1024",
+                            quality: "hd",
+                        },
+                        {
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+                            },
+                        }
+                    );
+                    const imageUrl = response.data.data[0].url;
+                    article += `<img src="${imageUrl}" alt="Generated Illustration" style="width:100%;height:auto;margin-top:20px;">`;
+                }
+            }
             console.log('Images generated and inserted into article.');
         }
+
+        //article = cleanIncompleteSentence(article);
 
         console.log('Generated article:', article);
 
@@ -358,7 +489,7 @@ router.post('/generate', async (req, res) => {
         await Generation.create({
             title: title,
             description: article,
-            userId: req.session.user.id,
+            userId: user.userId,
         });
 
         res.json({
