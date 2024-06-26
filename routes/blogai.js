@@ -492,7 +492,7 @@ router.post('/generate', async (req, res) => {
             userId: user.userId,
         });
 
-        res.json({
+        return res.json({
             article,
             title,
             totalCost,

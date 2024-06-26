@@ -197,9 +197,9 @@ router.post('/login', validate(userSchema), async (req, res) => {
 
         const token = jwt.sign({ username }, JWT_SECRET, { expiresIn: '1h' });
 
+        res.cookie('token', token, { httpOnly: true, secure: false });
 
         // useless
-        // res.cookie('token', token, { httpOnly: true, secure: false });
         /*user.token = token;
         await user.save();
         res.cookie('token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production' });*/
